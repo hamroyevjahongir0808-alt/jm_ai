@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c0a">
+  <title>JM.AI — fikrdan natijaga</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090c0a;
+      --panel: #111512;
+      --panel-2: #171d19;
+      --line: #252e28;
+      --text: #eef1ed;
+      --muted: #939c95;
+      --accent: #b7d4ae;
+      --accent-ink: #10170f;
+      --danger: #ff8989;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 68% 12%, #122018 0, transparent 38%), var(--bg); color: var(--text); }
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+    .app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar { display: flex; flex-direction: column; padding: 24px 16px 16px; border-right: 1px solid #ffffff0b; background: #090c0af2; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 9px 26px; }
+    .brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 850; letter-spacing: -1px; }
+    .brand-name { font-size: 17px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-caption { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .new-chat { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); text-align: left; cursor: pointer; }
+    .new-chat:hover, .nav-item:hover, .history-item:hover { background: #23241f; }
+    .new-chat span:first-child { font-size: 13px; font-weight: 600; }
+    .shortcut { color: var(--muted); font-size: 11px; }
+    .section-label { margin: 27px 9px 9px; color: #77786f; font-size: 10px; font-weight: 750; letter-spacing: 1.15px; text-transform: uppercase; }
+    .nav-list, .history-list { display: grid; gap: 3px; }
+    .nav-item, .history-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px; border: 0; border-radius: 8px; background: transparent; color: #c6c6bd; text-align: left; cursor: pointer; font-size: 12px; }
+    .nav-item.active { background: #25271f; color: var(--accent); }
+    .nav-icon { display: grid; width: 20px; place-items: center; color: #a4a59b; font-size: 13px; }
+    .nav-item.active .nav-icon { color: var(--accent); }
+    .history-item { display: block; overflow: hidden; color: #999a91; text-overflow: ellipsis; white-space: nowrap; }
+    .sidebar-bottom { margin-top: auto; padding-top: 16px; }
+    .profile { display: flex; align-items: center; gap: 10px; padding: 13px 8px 0; border-top: 1px solid var(--line); }
+    .avatar { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #303127; color: var(--accent); font-size: 11px; font-weight: 700; }
+    .profile-name { font-size: 12px; font-weight: 600; }
+    .profile-note { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .main { position: relative; display: flex; min-width: 0; flex-direction: column; overflow: hidden; isolation: isolate; background: linear-gradient(145deg, #0b100d99, #090c0a66 58%); }
+    .main > :not(.ambient-scene) { position: relative; z-index: 1; }
+    .ambient-scene { position: absolute; z-index: 0; inset: 64px 0 0; overflow: hidden; pointer-events: none; perspective: 1000px; }
+    .orb { position: absolute; top: 8%; right: 9%; width: min(34vw, 410px); aspect-ratio: 1; border: 1px solid #c5e1c21c; border-radius: 43% 57% 63% 37% / 43% 40% 60% 57%; background: radial-gradient(ellipse at 32% 28%, #dff3d628 0, #82b78a20 18%, #39745126 38%, #174c3920 62%, #09130e00 76%), linear-gradient(145deg, #c2e8c018, #47685608 52%, #123a2a19); box-shadow: inset -24px -24px 58px #03060488, inset 12px 12px 32px #e6ffe412, 0 0 90px #52745b0b; transform-style: preserve-3d; animation: orb-float 20s ease-in-out infinite alternate; }
+    .orb::before, .orb::after { position: absolute; content: ""; inset: 12%; border: 1px solid #c9e6d025; border-radius: 50%; transform: rotateX(68deg) rotateZ(-24deg); box-shadow: 0 0 22px #8de8ff0b; }
+    .orb::after { inset: -6% 10%; border-color: #a7cbb327; transform: rotateX(71deg) rotateZ(52deg); }
+    .orb-small { position: absolute; top: 54%; right: 34%; width: 26px; aspect-ratio: 1; border: 1px solid #d8ead888; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #e5f1df, #8eb99291 18%, #46745c55 52%, #244c3512); box-shadow: 0 0 28px #8ab39133, inset -5px -5px 12px #1a302355; animation: orb-float 14s ease-in-out infinite alternate-reverse; }
+    .ambient-glow { position: absolute; top: 8%; right: -7%; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, #52765c12, #334a3608 43%, transparent 70%); filter: blur(16px); }
+    @keyframes orb-float { from { transform: translate3d(0, -5px, 0) rotateX(-6deg) rotateY(6deg) rotateZ(-4deg); } to { transform: translate3d(-8px, 10px, 14px) rotateX(6deg) rotateY(-8deg) rotateZ(6deg); } }
+    .topbar { display: flex; min-height: 64px; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid #ffffff0b; background: #090c0a9c; backdrop-filter: blur(10px); }
+    .workspace-title { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 650; }
+    .status { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #77786f; }
+    .status.ready .status-dot { background: var(--accent); box-shadow: 0 0 9px #c9f36666; }
+    .top-actions { display: flex; align-items: center; gap: 16px; }
+    .icon-button { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid transparent; border-radius: 9px; background: transparent; color: #b7b8ae; cursor: pointer; }
+    .icon-button:hover { border-color: var(--line); background: var(--panel); color: var(--text); }
+    .content { display: flex; width: min(900px, 100%); min-height: 0; flex: 1; flex-direction: column; margin: 0 auto; padding: 38px 32px 24px; }
+    .chat-pane { display: flex; min-width: 0; min-height: 0; flex: 1; flex-direction: column; }
+    .content.builder-active { display: grid; width: min(1480px, 100%); grid-template-columns: minmax(360px, .92fr) minmax(0, 1.08fr); gap: 18px; padding: 20px 24px; }
+    .content.builder-active .prompt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .builder-panel { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; border: 1px solid #ffffff12; border-radius: 15px; background: #0c100de8; box-shadow: 0 22px 65px #00000028, inset 0 1px #ffffff08; }
+    .builder-panel[hidden] { display: none; }
+    .builder-toolbar { display: flex; min-height: 62px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; border-bottom: 1px solid #ffffff0d; }
+    .builder-heading { display: flex; min-width: 0; align-items: center; gap: 10px; }
+    .builder-heading strong, .builder-heading small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .builder-heading strong { font-size: 11px; font-weight: 700; }
+    .builder-heading small { max-width: 280px; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .builder-live-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #9dc794; box-shadow: 0 0 12px #a4d39a55; }
+    .builder-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+    .builder-control { padding: 6px 8px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: #919b92; cursor: pointer; font-size: 9px; transition: background .2s ease, border-color .2s ease, color .2s ease; }
+    .builder-control:hover, .builder-control.active { border-color: #b7d4ae20; background: #b7d4ae0a; color: #dce8d9; }
+    .builder-divider { width: 1px; height: 18px; margin: 0 3px; background: #ffffff12; }
+    .builder-stage { display: flex; min-height: 0; flex: 1; justify-content: center; overflow: hidden; background: #080b09; }
+    .builder-empty { display: flex; max-width: 300px; flex-direction: column; align-items: center; justify-content: center; padding: 24px; color: #e5ebe4; text-align: center; }
+    .builder-empty span { display: grid; width: 42px; height: 42px; margin-bottom: 14px; place-items: center; border: 1px solid #b7d4ae24; border-radius: 13px; color: var(--accent); font-size: 19px; }
+    .builder-empty strong { font-size: 12px; font-weight: 650; }
+    .builder-empty p { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .builder-stage iframe { display: block; width: 100%; height: 100%; flex: 1; border: 0; background: #fff; transition: max-width .25s ease, box-shadow .25s ease; }
+    .builder-stage.mobile iframe { max-width: 390px; box-shadow: 0 0 0 1px #ffffff22, 0 0 40px #0009; }
+    .builder-stage pre { width: 100%; height: 100%; overflow: auto; margin: 0; padding: 18px; color: #d5e0d4; font: 11px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .builder-footer { display: flex; min-height: 32px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 13px; border-top: 1px solid #ffffff0a; color: #727d73; font-size: 9px; }
+    .welcome { margin: auto 0 24px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 17px; padding: 6px 9px; border: 1px solid #394128; border-radius: 999px; background: #1c2115; color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .3px; }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 48px); font-weight: 660; letter-spacing: -2.4px; line-height: 1.1; }
+    h1 span { color: var(--accent); }
+    .welcome-copy { max-width: 540px; margin: 14px 0 25px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .unique-card { display: flex; max-width: 620px; align-items: center; gap: 12px; margin: 0 0 20px; padding: 11px 13px; border: 1px solid #b7d4ae1c; border-radius: 11px; background: linear-gradient(110deg, #c7e2ca0a, #daf6ff02 70%); }
+    .unique-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid #3c4929; border-radius: 11px; color: var(--accent); font-size: 18px; }
+    .unique-title { margin-bottom: 4px; font-size: 12px; font-weight: 700; }
+    .unique-copy { color: #a8aa9d; font-size: 11px; line-height: 1.55; }
+    .cards-label { margin-bottom: 11px; color: #a7a89d; font-size: 11px; font-weight: 650; }
+    .prompt-grid { display: grid; max-width: 720px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .prompt-card { min-height: 70px; padding: 12px; border: 1px solid #ffffff10; border-radius: 10px; background: #ffffff04; text-align: left; cursor: pointer; transition: border-color .22s ease, transform .22s ease, background .22s ease; }
+    .prompt-card:hover { transform: translateY(-2px); border-color: #78906f70; background: #b7d4ae08; }
+    .prompt-card strong { display: block; margin-bottom: 5px; font-size: 11px; }
+    .prompt-card span { display: block; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .conversation { display: none; flex: 1; overflow: auto; overscroll-behavior: contain; scroll-behavior: smooth; padding: 2px 6px 30px; }
+    .conversation.visible { display: block; }
+    .welcome.hidden { display: none; }
+    .message { display: flex; gap: 13px; margin: 20px 0 26px; animation: message-in .24s ease both; }
+    @keyframes message-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .message .avatar { width: 31px; height: 31px; flex: 0 0 auto; }
+    .message.user { justify-content: flex-end; }
+    .message.user .avatar { order: 2; background: #1b241e; color: #cbd9c7; }
+    .message-body { min-width: 0; flex: 1; }
+    .message.user .message-body { order: 1; flex: 0 1 auto; max-width: min(82%, 680px); padding: 11px 14px; border: 1px solid #ffffff0b; border-radius: 13px; background: #ffffff05; }
+    .message-name { margin: 2px 0 8px; color: #c9d1c9; font-size: 11px; font-weight: 650; }
+    .message-text { overflow-wrap: anywhere; color: #e1e7e1; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+    .message-tools { display: flex; gap: 5px; margin-top: 10px; }
+    .message-tools button { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; }
+    .message-tools button:hover { color: var(--text); }
+    .message.error .message-text { color: var(--danger); }
+    .typing { display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
+    .typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 1s infinite alternate; }
+    .typing i:nth-child(2) { animation-delay: .2s; }
+    .typing i:nth-child(3) { animation-delay: .4s; }
+    @keyframes pulse { to { opacity: .25; transform: translateY(-3px); } }
+    .composer-wrap { margin-top: 30px; }
+    .mode-strip { display: flex; overflow: auto; gap: 7px; margin-bottom: 10px; scrollbar-width: none; }
+    .mode-strip::-webkit-scrollbar { display: none; }
+    .mode-chip { flex: 0 0 auto; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: #a9aaa1; cursor: pointer; font-size: 10px; }
+    .mode-chip:hover, .mode-chip.active { border-color: #495137; background: #202319; color: var(--accent); }
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 7px; margin: -2px 0 10px; }
+    .quick-prompts[hidden] { display: none; }
+    .quick-prompt { padding: 7px 10px; border: 1px solid #ffffff17; border-radius: 8px; background: #d3ddff0a; color: #d1d2c9; cursor: pointer; font-size: 10px; text-align: left; }
+    .quick-prompt:hover { border-color: #8d98c64d; background: #c7d4ff14; color: var(--text); }
+    .composer { padding: 12px; border: 1px solid #ffffff18; border-radius: 13px; background: #101511e8; box-shadow: 0 12px 40px #00000020, inset 0 1px #ffffff08; transition: border-color .2s ease, box-shadow .2s ease; }
+    .composer:focus-within { border-color: #78906f70; box-shadow: 0 12px 40px #00000020, 0 0 0 3px #b7d4ae08; }
+    textarea { display: block; width: 100%; min-height: 58px; max-height: 190px; resize: vertical; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 13px; line-height: 1.55; }
+    textarea::placeholder { color: #77786f; }
+    .composer-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .composer-hint { color: #77786f; font-size: 10px; }
+    .send-button { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border: 0; border-radius: 9px; background: var(--accent); color: var(--accent-ink); cursor: pointer; font-size: 11px; font-weight: 750; }
+    .send-button:hover { background: #d8ff87; }
+    .send-button:disabled { opacity: .55; cursor: wait; }
+    .sample-button { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; margin-left: 12px; padding: 7px 9px; border: 1px solid #ffffff1b; border-radius: 8px; background: #e2e8ff08; color: #c1c3ba; cursor: pointer; font-size: 10px; }
+    .sample-button:hover, .sample-button[aria-expanded="true"] { border-color: #8995c34a; color: var(--text); }
+    .fine-print { margin: 10px 0 0; color: #696a62; text-align: center; font-size: 9px; }
+    .mobile-brand { display: none; }
+    .overlay { position: fixed; z-index: 4; display: none; inset: 0; align-items: center; justify-content: center; padding: 20px; background: #000a; }
+    .overlay.open { display: flex; }
+    .modal { width: min(460px, 100%); padding: 23px; border: 1px solid #383a32; border-radius: 16px; background: #191a16; box-shadow: 0 25px 80px #0009; }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .modal h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -.4px; }
+    .modal-intro { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .field { display: grid; gap: 7px; margin: 14px 0; }
+    .field label { color: #c8c9bf; font-size: 11px; font-weight: 650; }
+    .field input { width: 100%; padding: 10px 11px; border: 1px solid #383a32; border-radius: 8px; outline: 0; background: #11120f; color: var(--text); font-size: 12px; }
+    .field input:focus { border-color: #77845d; }
+    .security-note { margin: 14px 0 18px; padding: 10px; border-radius: 8px; background: #22231e; color: #a9aa9f; font-size: 10px; line-height: 1.55; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .secondary-button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: #c6c7bd; cursor: pointer; font-size: 11px; }
+    .toast { position: fixed; z-index: 5; right: 24px; bottom: 24px; max-width: min(380px, calc(100vw - 32px)); padding: 12px 15px; border: 1px solid #45483c; border-radius: 10px; background: #20211c; color: var(--text); box-shadow: 0 10px 35px #0007; font-size: 12px; line-height: 1.5; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+    @media (min-width: 761px) and (max-width: 1020px) {
+      .content.builder-active { display: flex; flex-direction: column; gap: 14px; overflow: auto; padding: 16px; }
+      .content.builder-active .chat-pane { min-height: 520px; flex: 0 0 520px; }
+      .content.builder-active .builder-panel { min-height: 360px; flex: 0 0 420px; }
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { min-height: 58px; padding: 0 17px; }
+      .mobile-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 750; }
+      .mobile-brand .brand-mark { width: 28px; height: 28px; border-radius: 9px; font-size: 12px; }
+      .workspace-title { display: none; }
+      .top-actions { gap: 8px; }
+      .content { padding: 32px 17px 20px; }
+      .content.builder-active { display: flex; width: 100%; flex-direction: column; gap: 14px; overflow: auto; padding: 18px 17px 24px; }
+      .content.builder-active .chat-pane { height: min(62vh, 520px); min-height: 400px; flex: 0 0 auto; }
+      .content.builder-active .builder-panel { min-height: 380px; flex: 0 0 46vh; }
+      .content.builder-active .builder-toolbar { align-items: flex-start; flex-direction: column; }
+      .content.builder-active .builder-controls { width: 100%; flex-wrap: wrap; }
+      .content.builder-active .builder-heading small { max-width: 100%; }
+      .welcome { margin-bottom: 25px; }
+      .prompt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .conversation { padding-right: 0; padding-left: 0; }
+      .composer-wrap { margin-top: 18px; }
+      .status { font-size: 10px; }
+      .fine-print { line-height: 1.5; }
+      .orb { top: 7%; right: -8%; width: min(62vw, 290px); opacity: .72; }
+      .orb-small { right: 28%; }
+    }
+    @media (max-width: 390px) {
+      h1 { font-size: 34px; }
+      .prompt-card { padding: 10px; }
+      .composer-hint { max-width: 150px; line-height: 1.4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">JM</div>
+        <div><div class="brand-name">JM.AI</div><div class="brand-caption">Fikrdan natijaga</div></div>
+      </div>
+      <button class="new-chat" id="newChat"><span>+ &nbsp; Yangi suhbat</span><span class="shortcut">Ctrl K</span></button>
+      <div class="section-label">AI imkoniyatlari</div>
+      <nav class="nav-list" id="sideModes" aria-label="AI imkoniyatlari"></nav>
+      <div class="section-label">So‘nggi suhbatlar</div>
+      <div class="history-list" id="historyList"></div>
+      <div class="sidebar-bottom">
+        <div class="profile"><div class="avatar">JM</div><div><div class="profile-name">Mehmon</div><div class="profile-note">Suhbatlar shu sessiyada</div></div></div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="ambient-scene" aria-hidden="true"><div class="ambient-glow"></div><div class="orb"></div><div class="orb-small"></div></div>
+      <header class="topbar">
+        <div class="mobile-brand"><div class="brand-mark">JM</div><span>JM.AI</span></div>
+        <div class="workspace-title"><span>Shaxsiy yordamchingiz</span><span style="color:#66675f">/</span><span id="topMode">AI suhbat</span></div>
+        <div class="top-actions">
+          <div class="status" id="connectionStatus"><span class="status-dot"></span><span id="statusText">Model ulanmagan</span></div>
+          <button class="icon-button" id="settingsButton" aria-label="AI model sozlamalari" title="AI model sozlamalari">⚙</button>
+        </div>
+      </header>
+      <section class="content" id="content">
+        <div class="chat-pane" id="chatPane">
+          <div class="welcome" id="welcome">
+            <div class="eyebrow"><span>✦</span> KO‘P TILLI AI YORDAMCHI</div>
+            <h1>Salom, <span>qanday yordam</span><br>bera olaman?</h1>
+            <p class="welcome-copy">Savolni o‘zingizga qulay tilda yozing. Matn, g‘oya, kod yoki veb-sayt yaratishni boshlash uchun tayyor namunani tanlang.</p>
+            <div class="unique-card">
+              <div class="unique-icon">↗</div>
+              <div><div class="unique-title">G‘oyadan harakatga</div><div class="unique-copy">Fikrni 7 kunlik aniq reja va birinchi qadamga aylantiring.</div></div>
+            </div>
+            <div class="cards-label">Boshlash uchun birini tanlang</div>
+            <div class="prompt-grid" id="promptGrid"></div>
+          </div>
+          <div class="conversation" id="conversation" aria-live="polite"></div>
+          <div class="composer-wrap">
+            <div class="mode-strip" id="modeStrip" aria-label="Vazifa turini tanlang"></div>
+            <div class="composer">
+              <textarea id="promptInput" rows="2" placeholder="JM.AI’dan nima so‘ramoqchisiz?" aria-label="Xabaringiz"></textarea>
+              <div class="composer-bottom">
+                <span class="composer-hint" id="composerHint">Yuborish uchun Enter · yangi qator uchun Shift + Enter</span>
+                <button type="button" class="sample-button" id="sampleButton" aria-expanded="false">＋ Tayyor savol</button>
+                <button class="send-button" id="sendButton"><span>Yuborish</span><span>↑</span></button>
+              </div>
+            </div>
+            <div class="quick-prompts" id="quickPrompts" hidden></div>
+            <p class="fine-print">JM.AI xato qilishi mumkin. Muhim ma’lumotlarni tekshirib oling.</p>
+          </div>
+        </div>
+        <aside class="builder-panel" id="builderPanel" aria-label="Veb-sayt ish maydoni" hidden>
+          <div class="builder-toolbar">
+            <div class="builder-heading">
+              <span class="builder-live-dot"></span>
+              <div><strong>Sayt muharriri</strong><small id="builderStatus">G‘oyangizni yozing — tayyor bo‘lgach, shu yerda ko‘ring.</small></div>
+            </div>
+            <div class="builder-controls">
+              <button type="button" class="builder-control active" data-builder-view="preview">Ko‘rish</button>
+              <button type="button" class="builder-control" data-builder-view="code">Kod</button>
+              <span class="builder-divider"></span>
+              <button type="button" class="builder-control viewport-control active" data-viewport="desktop" aria-label="Kompyuter ko‘rinishi">Desktop</button>
+              <button type="button" class="builder-control viewport-control" data-viewport="mobile" aria-label="Telefon ko‘rinishi">Telefon</button>
+            </div>
+          </div>
+          <div class="builder-stage" id="builderStage">
+            <div class="builder-empty" id="builderEmpty"><span>◈</span><strong>Saytingiz shu yerda ochiladi</strong><p>Chap tomonda nima yaratishni yozing. Tayyor saytni ko‘rib, kodini yuklab olishingiz mumkin.</p></div>
+            <iframe id="builderFrame" title="Yaratilgan veb-sayt ko‘rinishi" sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe>
+            <pre id="builderCode" hidden></pre>
+          </div>
+          <div class="builder-footer"><span>Ko‘rinish xavfsiz ajratilgan oynada ishlaydi</span><span>JM.AI Studio</span></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div><h2 id="modalTitle">Mahalliy AI’ni ulang</h2><p class="modal-intro">Ollama yordamida modelni kompyuteringizda ishga tushiring — API kaliti shart emas.</p></div>
+        <button class="icon-button" id="closeSettings" aria-label="Yopish">×</button>
+      </div>
+      <form id="settingsForm">
+        <div class="field"><label for="apiUrl">API manzili</label><input id="apiUrl" type="url" value="http://localhost:11434/v1" placeholder="http://localhost:11434/v1"></div>
+        <div class="field"><label for="modelName">Model nomi</label><input id="modelName" value="qwen2.5:3b" placeholder="qwen2.5:3b" required></div>
+        <div class="field"><label for="apiKey">API kaliti (mahalliy Ollama uchun kerak emas)</label><input id="apiKey" type="password" placeholder="Bo‘sh qoldiring" autocomplete="off"></div>
+        <div class="security-note">Ollama ishga tushgach, terminalda <code>ollama run qwen2.5:3b</code> buyrug‘ini bajaring. Model yuklangach, shu manzil va model nomi bilan ulang. Tashqi API tanlasangiz, uning kalitini kiriting.</div>
+        <div class="modal-actions"><button type="button" class="secondary-button" id="cancelSettings">Bekor qilish</button><button type="submit" class="send-button">Saqlash</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+    (() => {
+      const modes = [
+        { id: "chat", label: "AI suhbat", icon: "✦", description: "Savol bering, javob oling", placeholder: "Savolingizni yozing..." },
+        { id: "write", label: "Matn yozish", icon: "✎", description: "Xat, post yoki maqola", placeholder: "Qanday matn yozib beray?" },
+        { id: "website", label: "Veb-sayt yaratish", icon: "◈", description: "To‘liq ishlaydigan veb-sayt kodi", placeholder: "Qanday sayt kerakligini yozing..." },
+        { id: "summarize", label: "Qisqartirish", icon: "≡", description: "Uzun matndan qisqa mazmun", placeholder: "Qisqartirish uchun matnni kiriting..." },
+        { id: "translate", label: "Tarjima", icon: "⇄", description: "Turli tillar o‘rtasida tarjima", placeholder: "Matn va qaysi tilga tarjima qilishni yozing..." },
+        { id: "ideas", label: "G‘oyalar", icon: "✧", description: "Yangi fikr va variantlar", placeholder: "Qaysi mavzuda g‘oyalar kerak?" },
+        { id: "code", label: "Dasturlash", icon: "</>", description: "Kod, izoh va xatolar", placeholder: "Dasturlash vazifangizni yozing..." },
+        { id: "explain", label: "Tushuntirish", icon: "?", description: "Murakkab mavzuni sodda izohla", placeholder: "Nimani tushuntirib beray?" },
+        { id: "plan", label: "G‘oyadan Harakatga", icon: "↗", description: "Fikrni qadam-baqadam rejaga aylantir", placeholder: "G‘oyangizni yozing — uni amaliy rejaga aylantiraman..." },
+        { id: "ideaTest", label: "G‘oya laboratoriyasi", icon: "◎", description: "G‘oyani uch nuqtai nazardan tekshirib ko‘ring", placeholder: "G‘oya yoki qaroringizni yozing — uni uch tomondan sinayman..." }
+      ];
+      const instructions = {
+        chat: "You are JM.AI. Understand the user's request, answer directly and clearly, and keep it concise. Use a warm, calm, natural tone. Avoid abrupt, robotic phrasing, excessive praise, and filler. If the user is upset, acknowledge it briefly and help. Do not invent facts; if unsure, say so gently. If you do not understand, ask one brief clarifying question.",
+        write: "Write the requested content for its intended audience and tone. Make sensible assumptions if details are missing. Return the finished text without unnecessary commentary.",
+        website: "Create a polished, complete, mobile-first responsive and accessible website as one standalone HTML file. Use a high-end visual hierarchy, consistent spacing and typography, readable contrast, labelled controls, useful empty states, and working interactions. Use inline CSS and JavaScript only; do not rely on external libraries, fonts, or images. Match the requested brand and style, include realistic content, and do not add controls that do nothing. Return ONLY the complete HTML inside one ```html code block, with no introduction or explanation.",
+        summarize: "Berilgan matnni asosiy fikrlar, muhim faktlar va kerakli xulosalarni saqlagan holda qisqartiring. Matnda yo‘q ma’lumot qo‘shmang. O‘zbek tilida javob bering.",
+        translate: "Berilgan matnni foydalanuvchi ko‘rsatgan tilga tarjima qiling. Maqsad til ko‘rsatilmagan bo‘lsa, aniqlashtiring. Ma’noni va ohangni saqlang; ortiqcha izoh bermang.",
+        ideas: "Foydalanuvchi mavzusiga mos, bir-biridan farqli va amaliy g‘oyalar taklif qiling. Har biriga qisqa izoh bering. O‘zbek tilida javob bering.",
+        code: "Dasturlash yordamchisi sifatida talabni aniqlang, ishlaydigan kod yoki aniq yechim bering. Til va muhitni hisobga oling, muhim taxminlarni ayting. Kodni markdown code block ichida yozing.",
+        explain: "Mavzuni sodda, to‘g‘ri va bosqichma-bosqich tushuntiring. Kerak bo‘lsa kundalik hayotdan misol keltiring. Foydalanuvchi darajasini bilmasangiz, boshlovchiga mos izohlang.",
+        plan: "Siz JM.AI’ning G‘oyadan Harakatga yordamchisisiz. Foydalanuvchining xom g‘oyasini aniq maqsad, kimga foydasi, farazlar, bugun boshlash mumkin bo‘lgan birinchi qadam, 7 kunlik kunma-kun reja, zarur resurslar, ehtimoliy to‘siqlar va ularni kamaytirish yo‘li, muvaffaqiyatni o‘lchash mezoniga ajrating. Javobni foydalanuvchi tilida yozing; o‘zbekcha bo‘lsa, lotin yozuvidan foydalaning. Taxminlaringizni ochiq ayting va javobni lo‘nda saqlang.",
+        ideaTest: "Foydalanuvchining g‘oyasi yoki qarorini uch nuqtai nazardan tahlil qiling: ehtimoliy mijoz (kim va qanday ehtiyoj), ehtiyotkor tanqidchi (eng zaif taxmin va uni rad etishi mumkin bo‘lgan dalil), amaliy bajaruvchi (kerakli vaqt, resurs va ilk qadam). Bu rollar haqiqiy odamlarning fikri emas, faqat tahlil usuli ekanini aniq ayting. Javobni quyidagicha tuzing: asosiy taxmin; uch nuqtai nazarning har birida imkoniyat va shubha; 48 soatda amalga oshadigan eng arzon haqiqiy sinov; qadamlar, kimdan nima so‘rash yoki ko‘rsatish, o‘lchash uchun vaqtinchalik mezon; qaysi natijada davom etish, o‘zgartirish yoki to‘xtatish. Bozor haqidagi faktlarni o‘ylab topmang, noaniq taxminlarni ochiq belgilang va qisqa javob bering."
+      };
+      const languageInstruction = "Reply in the same language and writing system as the user's latest message, unless they request another language. Do not mix languages. Keep a warm, calm, respectful tone; avoid abrupt phrasing and unnecessary filler.";
+      const prompts = [
+        { mode: "write", title: "Matn yozish", text: "Post, xat yoki maqola tayyorlang", prompt: "Mahsulotim uchun auditoriyaga mos, qiziqarli ijtimoiy tarmoq posti yoz. Mahsulot: [mahsulot] Auditoriya: [kimlar]" },
+        { mode: "website", title: "Veb-sayt yaratish", text: "G‘oyangizga mos sayt tayyorlang", prompt: "Menga [sayt turi] uchun telefon va kompyuterga mos, to‘liq ishlaydigan veb-sayt yarat. Nomi: [nom] Kerakli bo‘limlar: [bo‘limlar]" },
+        { mode: "plan", title: "Reja tuzish", text: "G‘oyani amaliy qadamlarga bo‘ling", prompt: "Mening g‘oyam: [g‘oyangiz]. Uni boshlash uchun sodda 7 kunlik reja tuz." },
+        { mode: "ideaTest", title: "G‘oya laboratoriyasi", text: "3 nuqtai nazar + 48 soatlik sinov", prompt: "Mening g‘oyam: [g‘oyangiz]. Uni mijoz, tanqidchi va bajaruvchi nuqtai nazaridan tahlil qilib, 48 soatda arzon tekshirish rejasini tuz." }
+      ];
+      const promptExamples = {
+        chat: [
+          { label: "Savolga javob", prompt: "Quyidagi savolga sodda va aniq javob ber: [savolingiz]" },
+          { label: "Biror narsani o‘rganish", prompt: "[mavzu]ni boshlovchiga tushunarli qilib misollar bilan tushuntir." }
+        ],
+        write: [
+          { label: "Ijtimoiy tarmoq posti", prompt: "[mavzu yoki mahsulot] haqida qisqa, e'tibor tortadigan post yoz." },
+          { label: "Rasmiy xat", prompt: "[kimga] uchun [maqsad] haqida muloyim rasmiy xat yoz." }
+        ],
+        website: [
+          { label: "Biznes sayti", prompt: "[biznes nomi] uchun xizmatlar, narxlar va aloqa bo‘limlari bor, telefonga mos bir sahifali sayt yarat." },
+          { label: "Portfolio sayti", prompt: "[kasb yoki ism] uchun loyiha kartalari, men haqimda va aloqa bo‘limlari bor portfolio sayti yarat." }
+        ],
+        summarize: [
+          { label: "5 punktda qisqartir", prompt: "Quyidagi matnni 5 ta asosiy punkt bilan qisqartir:\n[matn]" },
+          { label: "Juda qisqa xulosa", prompt: "Quyidagi matnning asosiy mazmunini 2 jumlada yoz:\n[matn]" }
+        ],
+        translate: [
+          { label: "Ingliz tiliga", prompt: "Quyidagi matnni ingliz tiliga tabiiy tarjima qil:\n[matn]" },
+          { label: "O‘zbek tiliga", prompt: "Quyidagi matnni o‘zbek tiliga tabiiy tarjima qil:\n[matn]" }
+        ],
+        ideas: [
+          { label: "5 ta yangi g‘oya", prompt: "[mavzu] bo‘yicha amalga oshirish mumkin bo‘lgan 5 ta yangi g‘oya ber." },
+          { label: "Biznes g‘oyalari", prompt: "Kam mablag‘ bilan boshlasa bo‘ladigan [soha] biznes g‘oyalarini taklif qil." }
+        ],
+        code: [
+          { label: "Kod yozish", prompt: "[vazifa] uchun [dasturlash tili]da sodda, ishlaydigan kod yoz va qisqa izohla." },
+          { label: "Xatoni topish", prompt: "Quyidagi koddagi xatoni top, tuzatilgan kodni yoz va qisqacha izohla:\n[kod]" }
+        ],
+        explain: [
+          { label: "Sodda tushuntirish", prompt: "[mavzu]ni kundalik misol bilan sodda qilib tushuntir." },
+          { label: "Bosqichma-bosqich", prompt: "[vazifa yoki mavzu]ni boshlovchi uchun bosqichma-bosqich tushuntir." }
+        ],
+        plan: [
+          { label: "7 kunlik reja", prompt: "Mening g‘oyam: [g‘oya]. Uni boshlash uchun sodda 7 kunlik reja tuz." },
+          { label: "Bugun boshlash", prompt: "Mening maqsadim: [maqsad]. Bugun boshlashim uchun 3 ta aniq qadam ayt." }
+        ],
+        ideaTest: [
+          { label: "Biznes g‘oyasini sinash", prompt: "Biznes g‘oyam: [g‘oya]. Mijoz, tanqidchi va bajaruvchi ko‘zi bilan tahlil qil, 48 soatda talabni tekshiradigan arzon tajriba taklif et." },
+          { label: "Qarorni tekshirish", prompt: "Qarorim: [qaror]. Foyda, xavf va eng noaniq taxminlarni uch nuqtai nazardan tekshir, bugun boshlash mumkin bo‘lgan kichik sinov taklif et." }
+        ]
+      };
+      const $ = (selector) => document.querySelector(selector);
+      const sideModes = $("#sideModes");
+      const modeStrip = $("#modeStrip");
+      const promptGrid = $("#promptGrid");
+      const quickPrompts = $("#quickPrompts");
+      const sampleButton = $("#sampleButton");
+      const welcome = $("#welcome");
+      const conversation = $("#conversation");
+      const promptInput = $("#promptInput");
+      const content = $("#content");
+      const builderPanel = $("#builderPanel");
+      const builderStage = $("#builderStage");
+      const builderFrame = $("#builderFrame");
+      const builderCode = $("#builderCode");
+      const builderEmpty = $("#builderEmpty");
+      const builderStatus = $("#builderStatus");
+      const sendButton = $("#sendButton");
+      const overlay = $("#settingsOverlay");
+      const status = $("#connectionStatus");
+      const statusText = $("#statusText");
+      let activeMode = "chat";
+      let apiConfig = { url: "http://localhost:11434/v1", model: "qwen2.5:3b", key: "" };
+      let chats = [];
+      let activeChatId = null;
+      let quickPromptsOpen = false;
+      let generatedWebsite = "";
+      let builderView = "preview";
+      let builderViewport = "desktop";
+      let toastTimer;
+
+      function currentChat() {
+        return chats.find((chat) => chat.id === activeChatId);
+      }
+
+      function extractWebsiteHTML(output) {
+        const match = output.match(/```(?:html)?\s*([\s\S]*?)```/i);
+        return match
+          ? match[1].trim()
+          : /^\s*(?:<!doctype html|<html[\s>])/i.test(output) ? output.trim() : "";
+      }
+
+      function setBuilderView(view) {
+        builderView = view;
+        builderFrame.hidden = !generatedWebsite || view !== "preview";
+        builderCode.hidden = !generatedWebsite || view !== "code";
+        builderEmpty.hidden = Boolean(generatedWebsite);
+        builderStage.classList.toggle("mobile", builderViewport === "mobile");
+        document.querySelectorAll("[data-builder-view]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.builderView === view);
+        });
+      }
+
+      function setBuilderViewport(viewport) {
+        builderViewport = viewport;
+        builderStage.classList.toggle("mobile", viewport === "mobile");
+        document.querySelectorAll("[data-viewport]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.viewport === viewport);
+        });
+      }
+
+      function updateBuilderPreview(output) {
+        generatedWebsite = extractWebsiteHTML(output);
+        if (!generatedWebsite) {
+          builderStatus.textContent = "Javob ichida HTML kodi topilmadi.";
+          setBuilderView("preview");
+          return;
+        }
+        builderFrame.srcdoc = generatedWebsite;
+        builderCode.textContent = generatedWebsite;
+        builderStatus.textContent = "Sayt tayyor — ko‘rib chiqing yoki kodini yuklab oling.";
+        setBuilderView(builderView);
+      }
+
+      function syncBuilderFromChat(chat) {
+        const messages = chat ? chat.messages : [];
+        const latestWebsite = messages.slice().reverse().find((message) => message.role === "assistant" && message.mode === "website");
+        if (latestWebsite) updateBuilderPreview(latestWebsite.content);
+        else {
+          generatedWebsite = "";
+          builderFrame.srcdoc = "";
+          builderCode.textContent = "";
+          builderStatus.textContent = "G‘oyangizni yozing — tayyor bo‘lgach, shu yerda ko‘ring.";
+          setBuilderView("preview");
+        }
+      }
+
+      function renderModeButtons() {
+        sideModes.innerHTML = "";
+        modeStrip.innerHTML = "";
+        modes.forEach((mode) => {
+          const nav = document.createElement("button");
+          nav.className = "nav-item" + (mode.id === activeMode ? " active" : "");
+          nav.innerHTML = '<span class="nav-icon"></span><span></span>';
+          nav.querySelector(".nav-icon").textContent = mode.icon;
+          nav.lastElementChild.textContent = mode.label;
+          nav.addEventListener("click", () => selectMode(mode.id));
+          sideModes.appendChild(nav);
+
+          const chip = document.createElement("button");
+          chip.className = "mode-chip" + (mode.id === activeMode ? " active" : "");
+          chip.textContent = mode.label;
+          chip.addEventListener("click", () => selectMode(mode.id));
+          modeStrip.appendChild(chip);
+        });
+        const selected = modes.find((mode) => mode.id === activeMode);
+        $("#topMode").textContent = selected.label;
+        promptInput.placeholder = selected.placeholder;
+        content.classList.toggle("builder-active", activeMode === "website");
+        builderPanel.hidden = activeMode !== "website";
+        setBuilderView(builderView);
+        renderQuickPrompts();
+      }
+
+      function selectMode(id) {
+        activeMode = id;
+        if (id === "website") syncBuilderFromChat(currentChat());
+        renderModeButtons();
+        promptInput.focus();
+      }
+
+      function fillPrompt(text) {
+        promptInput.value = text;
+        promptInput.style.height = "auto";
+        promptInput.style.height = Math.min(promptInput.scrollHeight, 190) + "px";
+        promptInput.focus();
+      }
+
+      function renderQuickPrompts() {
+        quickPrompts.hidden = !quickPromptsOpen;
+        sampleButton.setAttribute("aria-expanded", String(quickPromptsOpen));
+        sampleButton.classList.toggle("active", quickPromptsOpen);
+        quickPrompts.innerHTML = "";
+        if (!quickPromptsOpen) return;
+        (promptExamples[activeMode] || promptExamples.chat).forEach((example) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "quick-prompt";
+          button.textContent = example.label;
+          button.title = example.prompt;
+          button.addEventListener("click", () => fillPrompt(example.prompt));
+          quickPrompts.appendChild(button);
+        });
+      }
+
+      function renderPromptCards() {
+        prompts.forEach((prompt) => {
+          const card = document.createElement("button");
+          card.className = "prompt-card";
+          card.innerHTML = "<strong></strong><span></span>";
+          card.querySelector("strong").textContent = prompt.title;
+          card.querySelector("span").textContent = prompt.text;
+          card.addEventListener("click", () => {
+            selectMode(prompt.mode);
+            fillPrompt(prompt.prompt);
+          });
+          promptGrid.appendChild(card);
+        });
+      }
+
+      function renderHistory() {
+        const list = $("#historyList");
+        list.innerHTML = "";
+        chats.slice().reverse().forEach((chat) => {
+          if (!chat.messages.length) return;
+          const item = document.createElement("button");
+          item.className = "history-item";
+          item.textContent = chat.title || "Yangi suhbat";
+          item.title = item.textContent;
+          item.addEventListener("click", () => openChat(chat.id));
+          list.appendChild(item);
+        });
+      }
+
+      function openChat(id) {
+        activeChatId = id;
+        const chat = currentChat();
+        conversation.innerHTML = "";
+        const hasWebsite = Boolean(chat && chat.messages.some((message) => message.role === "assistant" && message.mode === "website"));
+        if (hasWebsite) activeMode = "website";
+        if (chat) chat.messages.forEach((message) => {
+          const websiteOutput = message.role === "assistant" && message.mode === "website";
+          addMessageElement(message.role, message.content, websiteOutput, websiteOutput);
+        });
+        syncBuilderFromChat(chat);
+        renderModeButtons();
+        updateView();
+      }
+
+      function updateView() {
+        const hasMessages = Boolean(currentChat() && currentChat().messages.length);
+        welcome.classList.toggle("hidden", hasMessages);
+        conversation.classList.toggle("visible", hasMessages);
+        renderHistory();
+      }
+
+      function addMessageElement(role, content, withTools, websiteOutput) {
+        const message = document.createElement("article");
+        message.className = "message " + role;
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = role === "user" ? "Siz" : "JM";
+        const body = document.createElement("div");
+        body.className = "message-body";
+        const name = document.createElement("div");
+        name.className = "message-name";
+        name.textContent = role === "user" ? "Siz" : "JM.AI";
+        const text = document.createElement("div");
+        text.className = "message-text";
+        text.textContent = content;
+        body.append(name, text);
+        if (withTools && role === "assistant") {
+          const tools = document.createElement("div");
+          tools.className = "message-tools";
+          const copy = document.createElement("button");
+          copy.textContent = "Nusxa olish";
+          copy.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(text.textContent);
+              showToast("Javob nusxalandi.");
+            } catch (_) {
+              showToast("Nusxa olish imkoni bo‘lmadi.");
+            }
+          });
+          tools.appendChild(copy);
+          if (websiteOutput) {
+            const download = document.createElement("button");
+            download.textContent = "HTML yuklab olish";
+            download.addEventListener("click", () => {
+              const html = extractWebsiteHTML(text.textContent);
+              if (!html) {
+                showToast("HTML kodi topilmadi. Saytni HTML kod bloki bilan qayta so‘rang.");
+                return;
+              }
+              const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "jm-ai-website.html";
+              link.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            });
+            tools.appendChild(download);
+          }
+          body.appendChild(tools);
+        }
+        message.append(avatar, body);
+        conversation.appendChild(message);
+        conversation.scrollTop = conversation.scrollHeight;
+        return message;
+      }
+
+      function showToast(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 3600);
+      }
+
+      function setConnected(connected) {
+        status.classList.toggle("ready", connected);
+        statusText.textContent = connected ? "Model sozlangan" : "Model ulanmagan";
+      }
+
+      function showSettings() {
+        $("#apiUrl").value = apiConfig.url;
+        $("#modelName").value = apiConfig.model;
+        $("#apiKey").value = apiConfig.key;
+        overlay.classList.add("open");
+        $("#apiKey").focus();
+      }
+
+      function hideSettings() {
+        overlay.classList.remove("open");
+      }
+
+      async function readModelStream(response, localModel, onToken) {
+        if (!response.body) throw new Error("Modeldan javob oqimi olinmadi.");
+        const contentType = response.headers.get("content-type") || "";
+        if (!localModel && !contentType.includes("text/event-stream")) {
+          const data = await response.json();
+          const answer = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+          if (typeof answer !== "string") throw new Error("API javob formatini taniy olmadim.");
+          onToken(answer);
+          return answer;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let answer = "";
+        while (true) {
+          const chunk = await reader.read();
+          buffer += decoder.decode(chunk.value, { stream: !chunk.done });
+          const lines = buffer.split(/\r?\n/);
+          buffer = lines.pop();
+          if (chunk.done && buffer.trim()) {
+            lines.push(buffer);
+            buffer = "";
+          }
+          for (const line of lines) {
+            const payload = localModel
+              ? line.trim()
+              : line.startsWith("data:") ? line.slice(5).trim() : "";
+            if (!payload || payload === "[DONE]") continue;
+            let data;
+            try {
+              data = JSON.parse(payload);
+            } catch (_) {
+              throw new Error("Model javob oqimining formati noto‘g‘ri.");
+            }
+            if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "Model xato qaytardi.");
+            const token = localModel
+              ? data.message && data.message.content
+              : data.choices && data.choices[0] && data.choices[0].delta && data.choices[0].delta.content;
+            if (typeof token === "string" && token) {
+              answer += token;
+              onToken(token);
+            }
+            if (localModel && data.done) return answer;
+          }
+          if (chunk.done) break;
+        }
+        return answer;
+      }
+
+      async function sendMessage() {
+        const text = promptInput.value.trim();
+        if (!text || sendButton.disabled) return;
+        const messageMode = activeMode;
+        const apiHostname = new URL(apiConfig.url).hostname;
+        if (!apiConfig.key && apiHostname !== "localhost" && apiHostname !== "127.0.0.1") {
+          showSettings();
+          showToast("Tashqi API uchun kalit kerak. Mahalliy Ollama kalitsiz ishlaydi.");
+          return;
+        }
+        if (!activeChatId) {
+          activeChatId = String(Date.now());
+          chats.push({ id: activeChatId, title: text.slice(0, 42), messages: [] });
+        }
+        const chat = currentChat();
+        chat.messages.push({ role: "user", content: text });
+        if (chat.messages.length === 1) chat.title = text.slice(0, 42);
+        addMessageElement("user", text, false);
+        promptInput.value = "";
+        promptInput.style.height = "";
+        updateView();
+        const typing = document.createElement("article");
+        typing.className = "message assistant";
+        typing.innerHTML = '<div class="avatar">JM</div><div class="message-body"><div class="message-name">JM.AI</div><div class="typing" aria-label="Javob tayyorlanmoqda"><i></i><i></i><i></i></div></div>';
+        conversation.appendChild(typing);
+        conversation.scrollTop = conversation.scrollHeight;
+        sendButton.disabled = true;
+        let assistantMessage = null;
+        let answerNode = null;
+        let pendingAnswer = "";
+        let answerFrame = 0;
+        const flushAnswer = () => {
+          answerFrame = 0;
+          if (!answerNode || !pendingAnswer) return;
+          answerNode.textContent += pendingAnswer;
+          pendingAnswer = "";
+          conversation.scrollTop = conversation.scrollHeight;
+        };
+        let answer = "";
+        try {
+          const base = apiConfig.url.trim().replace(/\/+$/, "");
+          const localModel = apiHostname === "localhost" || apiHostname === "127.0.0.1";
+          const endpoint = localModel
+            ? base.replace(/\/v1(?:\/chat\/completions)?$/i, "") + "/api/chat"
+            : /\/chat\/completions$/i.test(base) ? base : base + "/chat/completions";
+          const history = chat.messages.slice(-6).map((message) => ({ role: message.role, content: message.content }));
+          const maxTokens = messageMode === "chat" ? 96
+            : messageMode === "website" ? 1536
+              : messageMode === "plan" || messageMode === "write" || messageMode === "code" || messageMode === "ideaTest" ? 384
+              : 256;
+          const headers = { "Content-Type": "application/json" };
+          if (apiConfig.key) headers.Authorization = "Bearer " + apiConfig.key;
+          const requestBody = localModel
+            ? {
+                model: apiConfig.model,
+                messages: [{ role: "system", content: instructions[messageMode] + " " + languageInstruction }, ...history],
+                stream: true,
+                keep_alive: "10m",
+                options: { num_ctx: messageMode === "website" ? 2048 : 1024, num_predict: maxTokens, temperature: 0.3 }
+              }
+            : {
+                model: apiConfig.model,
+                messages: [{ role: "system", content: instructions[messageMode] + " " + languageInstruction }, ...history],
+                stream: true,
+                max_tokens: maxTokens,
+                temperature: 0.3
+              };
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(requestBody)
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const message = response.status === 401
+              ? "API kaliti qabul qilinmadi. Kalitni tekshiring."
+              : response.status === 403
+                ? "Bu model yoki API uchun ruxsat yo‘q."
+                : response.status === 404
+                  ? "Model topilmadi. Ollama’da avval ollama run qwen2.5:3b buyrug‘ini bajaring yoki model nomini tekshiring."
+                : response.status === 429
+                  ? "API so‘rov limiti yoki balans chekloviga yetdi."
+                  : "API so‘rovi bajarilmadi (HTTP " + response.status + ").";
+            throw new Error(message);
+          }
+          answer = await readModelStream(response, localModel, (token) => {
+            if (!assistantMessage) {
+              typing.remove();
+              assistantMessage = addMessageElement("assistant", "", true, messageMode === "website");
+              answerNode = assistantMessage.querySelector(".message-text");
+            }
+            pendingAnswer += token;
+            if (!answerFrame) answerFrame = requestAnimationFrame(flushAnswer);
+          });
+          if (answerFrame) {
+            cancelAnimationFrame(answerFrame);
+            flushAnswer();
+          }
+          if (typeof answer !== "string" || !answer.trim()) throw new Error("Model bo‘sh javob qaytardi.");
+          typing.remove();
+          chat.messages.push({ role: "assistant", content: answer, mode: messageMode });
+          if (messageMode === "website") updateBuilderPreview(answer);
+          setConnected(true);
+          updateView();
+        } catch (error) {
+          if (answerFrame) cancelAnimationFrame(answerFrame);
+          answerFrame = 0;
+          pendingAnswer = "";
+          typing.remove();
+          if (assistantMessage) assistantMessage.remove();
+          const message = error instanceof TypeError
+            ? apiConfig.url.includes("localhost") || apiConfig.url.includes("127.0.0.1")
+              ? "Mahalliy Ollama topilmadi. Ollama’ni o‘rnating, ishga tushiring va modelni yuklang."
+              : "API bilan bog‘lanib bo‘lmadi. Manzilni, internetni va API CORS ruxsatlarini tekshiring."
+            : error.message;
+          addMessageElement("assistant error", message, false);
+          showToast("Javob olishda xatolik yuz berdi.");
+        } finally {
+          sendButton.disabled = false;
+          promptInput.focus();
+        }
+      }
+
+      $("#newChat").addEventListener("click", () => {
+        activeChatId = null;
+        conversation.innerHTML = "";
+        syncBuilderFromChat(null);
+        updateView();
+        promptInput.focus();
+      });
+      document.querySelectorAll("[data-builder-view]").forEach((button) => {
+        button.addEventListener("click", () => setBuilderView(button.dataset.builderView));
+      });
+      document.querySelectorAll("[data-viewport]").forEach((button) => {
+        button.addEventListener("click", () => setBuilderViewport(button.dataset.viewport));
+      });
+      $("#settingsButton").addEventListener("click", showSettings);
+      sampleButton.addEventListener("click", () => {
+        quickPromptsOpen = !quickPromptsOpen;
+        renderQuickPrompts();
+      });
+      $("#closeSettings").addEventListener("click", hideSettings);
+      $("#cancelSettings").addEventListener("click", hideSettings);
+      overlay.addEventListener("click", (event) => { if (event.target === overlay) hideSettings(); });
+      document.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          $("#newChat").click();
+        }
+        if (event.key === "Escape") hideSettings();
+      });
+      $("#settingsForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const url = $("#apiUrl").value.trim();
+        const model = $("#modelName").value.trim();
+        const key = $("#apiKey").value.trim();
+        if (!url || !model) {
+          showToast("API manzili va model nomini to‘ldiring.");
+          return;
+        }
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+            showToast("Xavfsizlik uchun HTTPS manzil kiriting (yoki lokal modeldan foydalaning).");
+            return;
+          }
+          if (!key && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+            showToast("Tashqi API uchun API kalitini kiriting. Mahalliy Ollama kalitsiz ishlaydi.");
+            return;
+          }
+        } catch (_) {
+          showToast("API manzili yaroqli URL bo‘lishi kerak.");
+          return;
+        }
+        apiConfig = { url, model, key };
+        setConnected(false);
+        hideSettings();
+        showToast(key ? "Sozlamalar sahifa ochiq turganida amal qiladi." : "Mahalliy Ollama sozlandi. Ollama ishga tushganini tekshiring.");
+      });
+      sendButton.addEventListener("click", sendMessage);
+      promptInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+      promptInput.addEventListener("input", () => {
+        promptInput.style.height = "auto";
+        promptInput.style.height = Math.min(promptInput.scrollHeight, 190) + "px";
+      });
+
+      renderModeButtons();
+      renderPromptCards();
+      updateView();
+    })();
+  </script>
+</body>
+</html>
