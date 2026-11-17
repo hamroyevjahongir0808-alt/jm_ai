@@ -1,0 +1,63 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JM.AI</title>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;height:100vh;display:flex;background:#0f1115;color:#e8e8ee;font:15px system-ui,sans-serif}
+#sb{width:260px;background:#161922;display:flex;flex-direction:column;padding:10px;gap:6px}
+#sb button,select{background:#222735;color:#e8e8ee;border:0;border-radius:8px;padding:9px;cursor:pointer;font:inherit}
+#list{flex:1;overflow:auto}#list div{padding:8px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#list div:hover,#list .on{background:#222735}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}#top{display:flex;gap:6px;padding:10px;flex-wrap:wrap;border-bottom:1px solid #222735}
+.tab{padding:7px 12px;border-radius:20px;background:#222735;cursor:pointer;font-size:13px}.tab.on{background:#6c5ce7}
+#msgs{flex:1;overflow:auto;padding:20px max(16px,calc(50% - 380px))}.m{margin:14px 0;line-height:1.6}.u{background:#222735;padding:10px 14px;border-radius:14px;margin-left:15%}
+.m img{max-width:100%;border-radius:12px}code{background:#222735;padding:1px 5px;border-radius:4px}
+.code{background:#0a0c10;border-radius:10px;margin:8px 0;overflow:hidden}.ch{display:flex;justify-content:space-between;padding:6px 12px;background:#1c2030;font-size:12px}.ch a{cursor:pointer;margin-left:10px;color:#a29bfe}
+pre{margin:0;padding:12px;overflow:auto;font-size:13px}
+#bar{display:flex;gap:8px;padding:12px max(12px,calc(50% - 380px))}textarea{flex:1;background:#222735;color:inherit;border:0;border-radius:12px;padding:12px;font:inherit;resize:none;height:48px}
+#bar button{width:48px;border:0;border-radius:12px;background:#6c5ce7;color:#fff;font-size:18px;cursor:pointer}#bar .on{background:#e17055}
+#ov{display:none;position:fixed;inset:0;background:#000c;z-index:9;flex-direction:column;padding:20px;gap:8px}#ov iframe{flex:1;background:#fff;border:0;border-radius:10px}
+@media(max-width:700px){#sb{display:none}}
+</style></head><body>
+<div id="sb"><button onclick="newChat()">+ Yangi suhbat</button><div id="list"></div><div id="auth"></div></div>
+<div id="main"><div id="top"></div><div id="msgs"></div>
+<div id="bar"><button id="mic" onclick="listen()" title="Diktovka">🎤</button><textarea id="in" placeholder="Xabar yozing..." onkeydown="if(event.key=='Enter'&&!event.shiftKey){event.preventDefault();go()}"></textarea><button onclick="go()">➤</button><button id="vb" onclick="toggleVoice()" title="Ovozli suhbat">🎧</button></div></div>
+<div id="ov"><div><button onclick="dl()">⬇ Yuklab olish</button> <button onclick="$('ov').style.display='none'">✕ Yopish</button></div><iframe id="fr" sandbox="allow-scripts"></iframe></div>
+<script>
+const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const MODES={chat:'💬 Chat',code:'👨‍💻 Kod',site:'🌐 Sayt',image:'🎨 Rasm',council:'🧠 Kengash'};
+let chats=JSON.parse(localStorage.jm||'[]'),cur,mode='chat',busy=0,voice=0,rec,html='';
+const save=()=>localStorage.jm=JSON.stringify(chats.slice(0,50));
+$('top').innerHTML=Object.entries(MODES).map(([k,v])=>`<div class="tab" id="t${k}" onclick="setMode('${k}')">${v}</div>`).join('')+
+`<select id="model"><option value="fast">⚡ Tez</option><option value="smart">🧠 Aqlli</option><option value="mini">GPT mini</option></select>
+<select id="lang"><option value="uz-UZ">O'zbek</option><option value="ru-RU">Русский</option><option value="en-US">English</option></select>`;
+function setMode(m){mode=m;for(const k in MODES)$('t'+k).classList.toggle('on',k==m)}
+function newChat(){cur={id:Date.now(),title:'Yangi suhbat',msgs:[]};chats.unshift(cur);draw();side()}
+function side(){$('list').innerHTML=chats.map(c=>`<div class="${c==cur?'on':''}" onclick="cur=chats.find(x=>x.id==${c.id});draw();side()">${esc(c.title)}</div>`).join('')}
+function md(t){return t.split('```').map((p,i)=>{if(i%2){const n=p.indexOf('\n'),l=p.slice(0,n).trim();return `<div class="code"><div class="ch"><span>${l||'kod'}</span><span><a onclick="cp(this)">Nusxa</a>${l=='html'?'<a onclick="pv(this)">Ko\'rish</a>':''}</span></div><pre>${esc(p.slice(n+1))}</pre></div>`}
+ return esc(p).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')}).join('')}
+function draw(){$('msgs').innerHTML=cur.msgs.map(m=>`<div class="m ${m.role=='user'?'u':''}">${m.img?`<img src="${m.img}">`:md(m.content)}</div>`).join('');$('msgs').scrollTop=1e9}
+const cp=a=>navigator.clipboard.writeText(a.closest('.code').querySelector('pre').innerText);
+const pv=a=>{html=a.closest('.code').querySelector('pre').innerText;$('fr').srcdoc=html;$('ov').style.display='flex'};
+const dl=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='sayt.html';a.click()};
+function go(){const t=$('in').value;$('in').value='';send(t)}
+async function send(t){if(!t.trim()||busy)return;busy=1;cur.msgs.push({role:'user',content:t});if(cur.title=='Yangi suhbat')cur.title=t.slice(0,40);
+ const a={role:'assistant',content:''};cur.msgs.push(a);draw();side();
+ try{if(mode=='image'){a.content='🎨 Chizilmoqda...';draw();const j=await(await fetch('/api/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:t})})).json();
+   j.url?(a.img=j.url,a.content=''):a.content='Xato: '+j.error}
+  else{const r=await fetch(mode=='council'?'/api/council':'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({mode,model:$('model').value,messages:cur.msgs.slice(0,-1).filter(m=>!m.img).map(({role,content})=>({role,content}))})});
+   const rd=r.body.getReader(),d=new TextDecoder();for(;;){const{done,value}=await rd.read();if(done)break;a.content+=d.decode(value,{stream:true});draw()}}
+ }catch(e){a.content='Xato: '+e.message}
+ save();draw();busy=0;if(voice&&a.content)speak(a.content);else if(voice)listen()}
+function listen(){const S=window.SpeechRecognition||window.webkitSpeechRecognition;if(!S)return alert("Brauzer ovozni tanimaydi. Chrome ishlating.");
+ rec=new S();rec.lang=$('lang').value;$('mic').classList.add('on');rec.onresult=e=>{const t=e.results[0][0].transcript;voice?send(t):$('in').value=t};rec.onend=()=>$('mic').classList.remove('on');rec.start()}
+function speak(t){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/```[\s\S]*?```/g,' kod. ').replace(/[*#`]/g,''));u.lang=$('lang').value;u.onend=()=>voice&&listen();speechSynthesis.speak(u)}
+function toggleVoice(){voice=!voice;$('vb').classList.toggle('on',voice);if(voice)listen();else{rec&&rec.abort();speechSynthesis.cancel()}}
+async function authInit(){const c=await(await fetch('/config')).json(),u=await(await fetch('/auth/me')).json(),A=$('auth');
+ if(u){A.innerHTML=`<div style="font-size:13px;padding:6px">${esc(u.name||u.email)} <a href="#" onclick="fetch('/auth/logout',{method:'POST'}).then(()=>location.reload())">chiqish</a></div>`;return}
+ A.innerHTML='<div id="g"></div><button id="ap" style="margin-top:6px;width:100%"> Apple bilan kirish</button>';
+ const post=(p,b)=>fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(()=>location.reload());
+ if(c.google)addEventListener('load',()=>{google.accounts.id.initialize({client_id:c.google,callback:r=>post('/auth/google',{credential:r.credential})});google.accounts.id.renderButton($('g'),{theme:'filled_black',width:230})});
+ $('ap').onclick=async()=>{if(!c.apple)return alert('APPLE_CLIENT_ID sozlanmagan');AppleID.auth.init({clientId:c.apple,scope:'name email',redirectURI:location.origin,usePopup:true});
+  try{const r=await AppleID.auth.signIn();post('/auth/apple',{id_token:r.authorization.id_token,name:r.user&&r.user.name&&r.user.name.firstName})}catch{}}}
+setMode('chat');cur=chats[0];cur?draw():newChat();side();authInit();
+</script></body></html>
